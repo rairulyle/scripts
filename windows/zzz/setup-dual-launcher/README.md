@@ -244,9 +244,6 @@ The key insight: **launcher files must never be shared.** Only the game data (`Z
 **Will my game account or progress be affected?**
 No. ZZZ uses your HoYoverse account regardless of launcher. Both launchers connect to the same account and the same servers.
 
-**Can I use Epic just for top-ups without playing through it?**
-Yes. Launch through Epic once to verify the channel setup, then use it only when you want to purchase Genesis Crystals at a discounted price.
-
 **What if Steam and Epic release updates at different times?**
 Always update through your primary launcher. The secondary launcher will pick up game data changes automatically via the junction. Just let it verify files before playing through it again after a patch.
 
