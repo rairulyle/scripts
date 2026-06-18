@@ -83,8 +83,16 @@ while (-not $destGame) {
     $inputDest = Read-Host "Destination path"
     $candidate = if ([string]::IsNullOrWhiteSpace($inputDest)) { $defaultPaths[$destName] } else { $inputDest.Trim().Trim('"') }
 
+    $srcRoot  = [System.IO.Path]::GetPathRoot($srcGame)
+    $destRoot = [System.IO.Path]::GetPathRoot($candidate)
+
     if ($candidate -eq $srcGame) {
         Write-Host "  ERROR: Destination cannot be the same as source -- try again." -ForegroundColor Red
+    } elseif ($srcRoot -ine $destRoot) {
+        Write-Host "  ERROR: Source and destination are on different drives -- try again." -ForegroundColor Red
+        Write-Host "    Source drive      : $srcRoot" -ForegroundColor Red
+        Write-Host "    Destination drive : $destRoot" -ForegroundColor Red
+        Write-Host "  NTFS hard links cannot cross volumes, so both installs must live on the same drive." -ForegroundColor Yellow
     } elseif (Test-Path -LiteralPath $candidate) {
         $destItem = Get-Item -LiteralPath $candidate -Force
         if ($destItem.LinkType -eq 'Junction') {
@@ -144,6 +152,8 @@ if (-not (Test-Path -LiteralPath $destGame)) {
     Write-Host "Created destination folder: $destGame" -ForegroundColor Cyan
 }
 
+$failures = @()
+
 Write-Host ""
 Write-Host "=== Creating junctions ===" -ForegroundColor Cyan
 foreach ($item in $folders) {
@@ -157,8 +167,13 @@ foreach ($item in $folders) {
         }
         continue
     }
-    New-Item -ItemType Junction -Path $link -Target $item.FullName | Out-Null
-    Write-Host "  JUNCTION  $($item.Name)" -ForegroundColor Green
+    try {
+        New-Item -ItemType Junction -Path $link -Target $item.FullName -ErrorAction Stop | Out-Null
+        Write-Host "  JUNCTION  $($item.Name)" -ForegroundColor Green
+    } catch {
+        $failures += "Junction $($item.Name): $($_.Exception.Message)"
+        Write-Host "  FAILED    $($item.Name) -- $($_.Exception.Message)" -ForegroundColor Red
+    }
 }
 
 Write-Host ""
@@ -169,11 +184,27 @@ foreach ($item in $toLink) {
         Write-Host "  SKIP (exists)  $($item.Name)" -ForegroundColor DarkGray
         continue
     }
-    New-Item -ItemType HardLink -Path $dest -Target $item.FullName | Out-Null
-    Write-Host "  HARDLINK  $($item.Name)" -ForegroundColor Green
+    try {
+        New-Item -ItemType HardLink -Path $dest -Target $item.FullName -ErrorAction Stop | Out-Null
+        Write-Host "  HARDLINK  $($item.Name)" -ForegroundColor Green
+    } catch {
+        $failures += "HardLink $($item.Name): $($_.Exception.Message)"
+        Write-Host "  FAILED    $($item.Name) -- $($_.Exception.Message)" -ForegroundColor Red
+    }
 }
 
 Write-Host ""
+if ($failures.Count -gt 0) {
+    Write-Host "===================================================" -ForegroundColor Red
+    Write-Host "  Completed with $($failures.Count) error(s)" -ForegroundColor Red
+    Write-Host "===================================================" -ForegroundColor Red
+    foreach ($f in $failures) { Write-Host "  - $f" -ForegroundColor Red }
+    Write-Host ""
+    Write-Host "  The install is only partially linked. Review the errors above before resuming." -ForegroundColor Yellow
+    Write-Host ""
+    exit 1
+}
+
 Write-Host "===================================================" -ForegroundColor Green
 Write-Host "  Done!" -ForegroundColor Green
 Write-Host "===================================================" -ForegroundColor Green

@@ -48,7 +48,7 @@ Each launcher stays fully independent: its own HoYoPlay, its own channel config,
 ### Prerequisites
 
 - Windows (NTFS filesystem required — junctions don't work on FAT32/exFAT)
-- Both installs **must be on the same drive** (NTFS junctions can't cross drive letters)
+- Both installs **must be on the same drive** (NTFS hard links can't cross volumes — the script aborts if they differ)
 - ZZZ fully installed on one launcher (the **source**)
 - ZZZ install started on the other launcher, then **paused right after the launcher files appear** — before the 70 GB game data downloads
 
