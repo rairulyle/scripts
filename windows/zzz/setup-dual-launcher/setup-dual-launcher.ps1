@@ -58,6 +58,14 @@ while (-not $srcGame) {
     $inputPath = Read-Host "Source path"
     $candidate = if ([string]::IsNullOrWhiteSpace($inputPath)) { $defaultPaths[$sourceName] } else { $inputPath.Trim().Trim('"') }
 
+    # Resolve to absolute so the drive-root comparison below always has a real root.
+    try {
+        $candidate = [System.IO.Path]::GetFullPath($candidate)
+    } catch {
+        Write-Host "  ERROR: That doesn't look like a valid path -- try again." -ForegroundColor Red
+        continue
+    }
+
     if (-not (Test-Path -LiteralPath $candidate)) {
         Write-Host "  ERROR: Path does not exist -- try again." -ForegroundColor Red
         Write-Host "    $candidate" -ForegroundColor Red
@@ -77,16 +85,29 @@ Write-Host "  This is where junctions/hard links will be created (the $destName 
 Write-Host "  Default: $($defaultPaths[$destName])" -ForegroundColor DarkGray
 Write-Host "  Press Enter to use default, or paste a custom path." -ForegroundColor DarkGray
 
+# Drive-letter heuristic: compares roots only. subst'ed or mounted volumes can
+# fool it either way, but genuine cross-volume link failures are still caught at
+# link-creation time by the try/catch below, so it degrades safely.
+$srcRoot = [System.IO.Path]::GetPathRoot($srcGame)
+
 $destGame = $null
 while (-not $destGame) {
     Write-Host ""
     $inputDest = Read-Host "Destination path"
     $candidate = if ([string]::IsNullOrWhiteSpace($inputDest)) { $defaultPaths[$destName] } else { $inputDest.Trim().Trim('"') }
 
-    $srcRoot  = [System.IO.Path]::GetPathRoot($srcGame)
+    # Resolve to an absolute path so relative input gets a real drive root and
+    # the same-as-source comparison isn't fooled by case or slash differences.
+    try {
+        $candidate = [System.IO.Path]::GetFullPath($candidate)
+    } catch {
+        Write-Host "  ERROR: That doesn't look like a valid path -- try again." -ForegroundColor Red
+        continue
+    }
+
     $destRoot = [System.IO.Path]::GetPathRoot($candidate)
 
-    if ($candidate -eq $srcGame) {
+    if ($candidate -ieq $srcGame) {
         Write-Host "  ERROR: Destination cannot be the same as source -- try again." -ForegroundColor Red
     } elseif ($srcRoot -ine $destRoot) {
         Write-Host "  ERROR: Source and destination are on different drives -- try again." -ForegroundColor Red
