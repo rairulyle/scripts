@@ -10,11 +10,8 @@ ZZZ launched on Steam on June 17, 2026 — and with it came a dilemma.
 
 ## Why?
 
-Epic Games regularly offers **20–30% discounts on top-ups** through their regional pricing and coupon system. Steam, on the other hand, has the **community hub, playtime tracking, achievements, and your friends list**. Naturally, you want both.
-
-The problem? Installing ZZZ on both launchers means duplicating a **70+ GB install** just to get the best of two stores.
-
-You shouldn't have to choose. And you definitely shouldn't have to waste 70 GB.
+If you're already spending on Epic Games (Fortnite, Rocket League, etc.), you're probably sitting on cashback rewards with nowhere to put them. 
+ZZZ is available on Epic, so why not use them there? But Steam has the community hub, playtime tracking, achievements, and your friends list. Naturally, you want both.
 
 ---
 
